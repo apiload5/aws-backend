@@ -1,12 +1,4 @@
 fastapi
 uvicorn
 yt-dlp
-python-multipart
-slowapi
-limits
-aiofiles
 requests
-pydantic
-pydantic-settings
-starlette
-ffmpeg-python
