@@ -1,1 +1,1 @@
-web: uvicorn application:application --host 0.0.0.0 --port 8000
+web: gunicorn application:application --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 60
