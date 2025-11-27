@@ -1,14 +1,15 @@
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import yt_dlp
-import logging # Naya: Debugging ke liye
+import logging
 from urllib.parse import urlparse, parse_qs, urlunparse, urlencode
 
 # Logging setup for better AWS monitoring
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
+# AWS Elastic Beanstalk के लिए 'application' variable का उपयोग करें
+application = FastAPI(
     title="SaveMedia Backend (Optimized)",
     version="2.1",
     description="Supports Facebook, Instagram, TikTok with cookies — Direct URL only to save cost."
@@ -21,7 +22,7 @@ allowed_origins = [
     "https://ticnotester.blogspot.com",
 ]
 
-app.add_middleware(
+application.add_middleware( # 'application' variable का उपयोग करें
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
@@ -30,7 +31,7 @@ app.add_middleware(
 )
 
 # Health Check
-@app.get("/")
+@application.get("/") # 'application' variable का उपयोग करें
 def home():
     return {"message": "SaveMedia Backend running ✔ (Cost Optimized)"}
 
@@ -38,7 +39,7 @@ def home():
 # -------------------------------------------------------
 # 1️⃣ META endpoint (formats fetch) - ONLY THIS IS NEEDED
 # -------------------------------------------------------
-@app.get("/download")
+@application.get("/download") # 'application' variable का उपयोग करें
 def download_info(url: str = Query(..., description="Video URL to fetch information from.")):
     try:
         ydl_opts = {
@@ -47,9 +48,9 @@ def download_info(url: str = Query(..., description="Video URL to fetch informat
             "forcejson": True,
             "cookiefile": "cookies.txt",  # Ensure this file is present on the AWS server!
             "socket_timeout": 30,
-            "retries": 5, # Retries 10 se kam kardiye
+            "retries": 5,
             # Naya: Only give us the direct URL
-            "format": "best", 
+            "format": "best",
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -74,13 +75,13 @@ def download_info(url: str = Query(..., description="Video URL to fetch informat
                     "resolution": f.get("height"),
                     "filesize": filesize,
                     # Naya: Direct URL de rahe hain. Front-end ko yeh use karna chahiye.
-                    "direct_download_url": f.get("url"), 
+                    "direct_download_url": f.get("url"),
                     "suggested_filename": f"{video_title}.{f.get('ext')}"
                 })
 
         # Agar koi format na mile toh HTTPException raise karna behtar hai
         if not formats:
-             raise Exception("No suitable video formats found for this URL.")
+            raise Exception("No suitable video formats found for this URL.")
 
         return {
             "title": video_title,
